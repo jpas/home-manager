@@ -6,14 +6,6 @@ let
 
   cfg = config.programs.neovim;
 
-  extraPythonPackageType = mkOptionType {
-    name = "extra-python-packages";
-    description = "python packages in python.withPackages format";
-    check = with types;
-      (x: if isFunction x then isList (x pkgs.pythonPackages) else false);
-    merge = mergeOneOption;
-  };
-
   extraPython3PackageType = mkOptionType {
     name = "extra-python3-packages";
     description = "python3 packages in python.withPackages format";
@@ -101,26 +93,6 @@ in {
         description = ''
           Enable node provider. Set to <literal>true</literal> to
           use Node plugins.
-        '';
-      };
-
-      withPython = mkOption {
-        type = types.bool;
-        default = true;
-        description = ''
-          Enable Python 2 provider. Set to <literal>true</literal> to
-          use Python 2 plugins.
-        '';
-      };
-
-      extraPythonPackages = mkOption {
-        type = with types; either extraPythonPackageType (listOf package);
-        default = (_: [ ]);
-        defaultText = "ps: []";
-        example = literalExample "(ps: with ps; [ pandas jedi ])";
-        description = ''
-          A function in python.withPackages format, which returns a
-          list of Python 2 packages required for your plugins to work.
         '';
       };
 
@@ -245,10 +217,11 @@ in {
   config = let
     neovimConfig = pkgs.neovimUtils.makeNeovimConfig {
       inherit (cfg)
-        extraPython3Packages withPython3 extraPythonPackages withPython
+        extraPython3Packages withPython3
         withNodeJs withRuby viAlias vimAlias;
       configure = cfg.configure // moduleConfigure;
       plugins = cfg.plugins;
+      withPython2 = false;
     };
 
   in mkIf cfg.enable {
